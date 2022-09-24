@@ -5,7 +5,6 @@ import datetime
 
 notes = []
 keys = ["date_created", "aliases", "tags"]
-vaultPath = input("Enter the vault path: ")
 newMetadata = {}
 
 
@@ -19,18 +18,21 @@ def absoluteFilePaths(directory):
 
 # this function attempts to import the values of the frontmatter key
 # if it doesn't exist it creates a new key value for a given key
-def importKeyValue(note, key):
-    try:
+def importKeyValue(note, key, filepath):
+    if key == "date_created":
+        newMetadata[key] = creationDate(filepath)
         print(key)
-        # store value of note's aliases metadata
-        newMetadata[key] = note[key]
-        # if no values, initialize the value of the key as empty,
-        # instead of insterting an empty string
-        if note[key] is None:
+    else:
+        try:
+            # store value of note's aliases metadata
+            newMetadata[key] = note[key]
+            # if no values, initialize the value of the key as empty,
+            # instead of insterting an empty string
+            if note[key] is None:
+                newMetadata[key] = []
+        # if the key is non-existent, initialize the key-value pair
+        except KeyError:
             newMetadata[key] = []
-    # if the key is non-existent, initialize the key-value pair
-    except KeyError:
-        newMetadata[key] = []
 
 
 def creationDate(filename):
@@ -44,35 +46,20 @@ def creationDate(filename):
 # function reads, edits and outputs new metadata to markdown files
 def formatFrontmatter(filepaths):
     dateInput = input("Put created date as first frontmatter value? (y/n): ")
-    if dateInput == "y":
-        dateSelection = True
-        date = True
-    else:
+    if dateInput == "n":
         dateSelection = False
-        date = False
+    else:
+        dateSelection = True
     for i in filepaths:
+        dateSelection
         note = frontmatter.load(i)  # loading note using frontmatter import
         for k in keys:
-            if date is True:
-                newMetadata["date_created"] = creationDate(i)
-                date = False
-            else:
-                importKeyValue(note, k)
+            importKeyValue(note, k, i)
         # create new post from scratch using new metadata
-        date = dateSelection
-        if date is True:
-            newNote = frontmatter.Post(
-                content=note.content,
-                date_created=newMetadata["date_created"],
-                aliases=newMetadata[keys[1]],
-                tags=newMetadata[keys[2]],
-            )
-        else:
-            newNote = frontmatter.Post(
-                content=note.content,
-                aliases=newMetadata[keys[1]],
-                tags=newMetadata[keys[2]],
-            )
+        if dateSelection is False:
+            del newMetadata["date_created"]
+
+        newNote = frontmatter.Post(content=note.content, **newMetadata)
         # saves current file.
         f = BytesIO()
         with open(i, "wb") as f:
@@ -80,6 +67,9 @@ def formatFrontmatter(filepaths):
 
 
 if __name__ == "__main__":
+    vaultPath = input("Enter the vault path: ")
+    if vaultPath == "a":
+        vaultPath = "/Users/kevin/Documents/Obsidian notes/Notes copy/"
     # accumulating all filepaths to an array
     allPaths = absoluteFilePaths(vaultPath)
     # imports, edits, cleans and initializes all desired frontmatter keys

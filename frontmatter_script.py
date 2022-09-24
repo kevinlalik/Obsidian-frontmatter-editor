@@ -5,7 +5,7 @@ import datetime
 
 notes = []
 keys = ["date_created", "aliases", "tags"]
-vaultPath = "/Users/kevin/Documents/Obsidian notes/Notes copy/"
+vaultPath = input("Enter the vault path: ")
 newMetadata = {}
 
 

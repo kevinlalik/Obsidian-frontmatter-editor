@@ -4,7 +4,7 @@ from io import BytesIO
 import datetime
 
 notes = []
-keys = ["date_created", "aliases", "tags"]
+keys = ["date_created", "aliases", "tags", "course", "type"]
 newMetadata = {}
 
 
@@ -20,19 +20,27 @@ def absoluteFilePaths(directory):
 # if it doesn't exist it creates a new key value for a given key
 def importKeyValue(note, key, filepath):
     if key == "date_created":
-        newMetadata[key] = creationDate(filepath)
-        print(key)
+        return creationDate(filepath)
+        # print(key)
+    if key == "type":
+        return "note"
+    if key == "course":
+        return "D322"
+        # print(key + newMetadata[key])
+    if key == "tags":
+        return []
     else:
         try:
             # store value of note's aliases metadata
-            newMetadata[key] = note[key]
+            if note[key] is None:
+                return []
+            return note[key]
             # if no values, initialize the value of the key as empty,
             # instead of insterting an empty string
-            if note[key] is None:
-                newMetadata[key] = []
         # if the key is non-existent, initialize the key-value pair
         except KeyError:
-            newMetadata[key] = []
+            return []
+    # print(newMetadata[key])
 
 
 def creationDate(filename):
@@ -51,15 +59,21 @@ def formatFrontmatter(filepaths):
     else:
         dateSelection = True
     for i in filepaths:
-        dateSelection
         note = frontmatter.load(i)  # loading note using frontmatter import
         for k in keys:
-            importKeyValue(note, k, i)
+            newMetadata[k] = importKeyValue(note, k, i)
         # create new post from scratch using new metadata
         if dateSelection is False:
             del newMetadata["date_created"]
 
-        newNote = frontmatter.Post(content=note.content, **newMetadata)
+        newNote = frontmatter.Post(
+            content=note.content,
+            date_created=newMetadata["date_created"],
+            aliases=newMetadata["aliases"],
+            tags=newMetadata["tags"],
+            course=newMetadata["course"],
+            type=newMetadata["type"],
+        )
         # saves current file.
         f = BytesIO()
         with open(i, "wb") as f:
@@ -69,7 +83,7 @@ def formatFrontmatter(filepaths):
 if __name__ == "__main__":
     vaultPath = input("Enter the vault path: ")
     if vaultPath == "a":
-        vaultPath = "/Users/kevin/Documents/Obsidian notes/Notes copy/"
+        vaultPath = ""
     # accumulating all filepaths to an array
     allPaths = absoluteFilePaths(vaultPath)
     # imports, edits, cleans and initializes all desired frontmatter keys

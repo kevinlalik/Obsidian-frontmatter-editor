@@ -25,7 +25,7 @@ def importKeyValue(note, key, filepath):
     if key == "date_created":
         return creationDate(filepath)
     if key == "type":
-        return "note"
+        return ""
     if key == "course":
         return ""
     if key == "tags":
